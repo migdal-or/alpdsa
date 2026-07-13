@@ -1,5 +1,7 @@
 # AlpDSA — Passwordless Linux Login via Android Phone
 
+This project is inspired by [ALP](https://github.com/gernotfeichter/alp), yet independently written from scratch.
+
 Android has excellent hardware-backed security for private keys: the Keystore system with TEE (Trusted Execution Environment). **AlpDSA leverages this fully.** The ECDSA private key is generated and lives exclusively inside the phone's secure hardware — it cannot be extracted, backed up, or stolen by software. Only the public key is exported during one-time pairing. 
 
 You decide, on your Linux machine, whether to trust that public key. You decide, on your phone, whether to allow authentication right now (Setup Mode on/off). No secrets ever leave the device.
