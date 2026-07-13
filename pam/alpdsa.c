@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -41,6 +44,9 @@ static int connect_to_target(const alpdsa_target_t *target, int timeout_sec) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) return -1;
 
+    // These bound send()/recv() *after* the connection is established.
+    // They do NOT bound connect() itself on Linux — see the non-blocking
+    // connect below, which is what actually enforces timeout_sec here.
     struct timeval tv = { .tv_sec = timeout_sec, .tv_usec = 0 };
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
@@ -55,10 +61,45 @@ static int connect_to_target(const alpdsa_target_t *target, int timeout_sec) {
         memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
     }
 
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
         close(fd);
         return -1;
     }
+
+    int rc = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    if (rc < 0 && errno != EINPROGRESS) {
+        close(fd);
+        return -1;
+    }
+
+    if (rc < 0) { // EINPROGRESS: wait for the handshake to finish, bounded by timeout_sec
+        fd_set wfds;
+        FD_ZERO(&wfds);
+        FD_SET(fd, &wfds);
+        struct timeval sel_tv = { .tv_sec = timeout_sec, .tv_usec = 0 };
+
+        int sel = select(fd + 1, NULL, &wfds, NULL, &sel_tv);
+        if (sel <= 0) { // 0 = timed out, -1 = select() error
+            close(fd);
+            return -1;
+        }
+
+        int so_err = 0;
+        socklen_t len = sizeof(so_err);
+        if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_err, &len) < 0 || so_err != 0) {
+            close(fd);
+            return -1;
+        }
+    }
+
+    // Back to blocking mode: recv_exact()/send_all() rely on SO_RCVTIMEO/SO_SNDTIMEO
+    // to bound individual calls, not on O_NONBLOCK/EWOULDBLOCK semantics.
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+        close(fd);
+        return -1;
+    }
+
     return fd;
 }
 
@@ -131,16 +172,17 @@ int alpdsa_authenticate(const alpdsa_target_t *target, const char *pubkey_path) 
         goto cleanup;
     }
 
-    // Verify curve is P-256 via key params
+    // Verify curve is P-256 (OpenSSL may report it under either alias)
     char curve_name[64] = {0};
     if (EVP_PKEY_get_utf8_string_param(pubkey, OSSL_PKEY_PARAM_GROUP_NAME,
-                                       curve_name, sizeof(curve_name), NULL) != 1 ||
-        strcmp(curve_name, SN_X9_62_prime256v1) != 0) {
-        // Also try short name
-        if (strcmp(curve_name, "prime256v1") != 0) {
-            fprintf(stderr, "alpdsa: wrong curve: %s\n", curve_name);
-            goto cleanup;
-        }
+                                       curve_name, sizeof(curve_name), NULL) != 1) {
+        fprintf(stderr, "alpdsa: failed to read curve name\n");
+        goto cleanup;
+    }
+    if (strcmp(curve_name, SN_X9_62_prime256v1) != 0 &&
+        strcmp(curve_name, "secp256r1") != 0) {
+        fprintf(stderr, "alpdsa: wrong curve: %s\n", curve_name);
+        goto cleanup;
     }
 
     if (RAND_bytes(nonce, ALPDSA_NONCE_SIZE) != 1) {
