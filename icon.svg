@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="480" fill="#1a1a2e"/>
+
+  <!-- Mountain - green -->
+  <polygon points="512,200 200,760 824,760" fill="#1a4a2e" stroke="#0f3460" stroke-width="8"/>
+
+  <!-- Snow cap -->
+  <polygon points="512,200 430,360 594,360" fill="#e8e8e8"/>
+
+  <!-- Phone (base, left side) -->
+  <rect x="280" y="660" width="180" height="88" rx="14" fill="#0f3460" stroke="#e8e8e8" stroke-width="4"/>
+  <rect x="356" y="732" width="28" height="6" rx="4" fill="#e8e8e8"/>
+
+  <!-- Lock (at summit, open) -->
+  <rect x="472" y="260" width="80" height="60" rx="8" fill="#e8e8e8"/>
+  <path d="M488,260 V240 A24,24 0 0 1 536,240 V260" fill="none" stroke="#e8e8e8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M536,240 A24,24 0 0 1 564,260" fill="none" stroke="#e8e8e8" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Key: centered, straight, bold -->
+  <g transform="translate(512,590)">
+    <rect x="-16" y="-240" width="32" height="220" rx="8" fill="#e94560"/>
+    <circle cx="0" cy="-236" r="44" fill="none" stroke="#e94560" stroke-width="24"/>
+    <rect x="16" y="-60" width="32" height="20" rx="4" fill="#e94560"/>
+    <rect x="16" y="-100" width="28" height="20" rx="4" fill="#e94560"/>
+    <rect x="16" y="-140" width="24" height="20" rx="4" fill="#e94560"/>
+  </g>
+
+  <!-- Penguin: BIG, right side -->
+  <g transform="translate(700, 680) scale(4.4)">
+    <!-- Body -->
+    <ellipse cx="0" cy="0" rx="20" ry="26" fill="#2d2d44"/>
+    <!-- Belly -->
+    <ellipse cx="0" cy="3" rx="13" ry="18" fill="#e8e8e8"/>
+    <!-- Head -->
+    <circle cx="0" cy="-24" r="13" fill="#2d2d44"/>
+    <!-- Eyes -->
+    <circle cx="-5" cy="-26" r="3.5" fill="#e8e8e8"/>
+    <circle cx="5" cy="-26" r="3.5" fill="#e8e8e8"/>
+    <circle cx="-5" cy="-26" r="1.8" fill="#1a1a2e"/>
+    <circle cx="5" cy="-26" r="1.8" fill="#1a1a2e"/>
+    <!-- Beak - orange -->
+    <polygon points="-3.5,-22 3.5,-22 0,-17" fill="#ff6b00"/>
+    <!-- Flippers -->
+    <ellipse cx="-20" cy="-6" rx="7" ry="16" fill="#2d2d44" transform="rotate(15,-20,-6)"/>
+    <ellipse cx="20" cy="-6" rx="7" ry="16" fill="#2d2d44" transform="rotate(-15,20,-6)"/>
+    <!-- Feet - orange -->
+    <ellipse cx="-9" cy="26" rx="9" ry="5" fill="#ff6b00"/>
+    <ellipse cx="9" cy="26" rx="9" ry="5" fill="#ff6b00"/>
+    <!-- Bow tie -->
+    <polygon points="-7,-13 0,-10 7,-13 0,-16" fill="#e94560"/>
+  </g>
+
+  <!-- Shield outline (subtle) -->
+  <path d="M512,880 C320,820 240,680 240,600 L240,400 C300,400 360,360 360,280 C420,280 480,310 512,360 C544,310 604,280 664,280 C664,360 724,400 784,400 L784,600 C784,680 704,820 512,880 Z"
+        fill="none" stroke="#e94560" stroke-width="4" opacity="0.3"/>
+</svg>
