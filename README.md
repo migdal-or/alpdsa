@@ -6,6 +6,10 @@ You decide, on your Linux machine, whether to trust that public key. You decide,
 
 Replace password entry on Linux with ECDSA challenge-response authentication using your Android phone over local TCP. No Bluetooth, no FIDO2 tokens, no cloud.
 
+## What this project does NOT do (yet)
+
+- No push notifications on the phone to accept/decline each login attempt. The original [ALP](https://github.com/gernotfeichter/alp) had this, but it added complexity and latency. AlpDSA auto-approves every valid signature from the active key. You control access by toggling Setup Mode (blocks pairing) or stopping the service entirely.
+
 ## How it works
 
 1. **Pairing (one time)**: Linux asks the phone for its public key. You save it. The private key never leaves the phone.
@@ -61,8 +65,11 @@ Format: `[cmd:1B] [length:4B big-endian] [data:lengthB]`
 ## Requirements
 
 **Linux:**
-- Debian 13 (or any with PAM + OpenSSL 3.0)
 - `libpam0g-dev`, `libssl-dev`, `python3-cryptography`
+- Debian 13 (trixie) — primary development and test platform
+- Likely works on Ubuntu, other Debian derivatives, and most Linux distributions with PAM + OpenSSL 3.0
+- Probably fine on macOS with PAM (needs testing)
+- Windows: not supported (no PAM)
 
 **Android:**
 - Android 11+ (API 30+)
@@ -141,7 +148,7 @@ auth    requisite       pam_nologin.so
 ...
 ```
 
-Do NOT add to `/etc/pam.d/sudo` or `/etc/pam.d/sshd` — phone auth only for GUI unlock.
+I do NOT add it to `/etc/pam.d/sudo` or `/etc/pam.d/sshd` as I use my phone auth only for GUI unlock.
 
 ### 4. Disable Setup Mode
 
@@ -154,7 +161,7 @@ After pairing, turn off Setup Mode in the app. The phone will reject `GET_PUBKEY
 3. If phone is on the same Wi-Fi — login succeeds instantly
 4. If phone is offline, key is wrong, server disabled, anything bad happens — falls back to password
 
-Timeout: 1 second (configurable in `alpdsa.c`).
+Timeout: 1 second.
 
 ## Testing (without installing to system)
 
