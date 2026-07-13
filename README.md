@@ -6,6 +6,24 @@ You decide, on your Linux machine, whether to trust that public key. You decide,
 
 Replace password entry on Linux with ECDSA challenge-response authentication using your Android phone over local TCP. No Bluetooth, no FIDO2 tokens, no cloud.
 
+## How it works
+
+1. **Pairing (one time)**: Linux asks the phone for its public key. You save it. The private key never leaves the phone.
+
+2. **Login (every time)**: Linux generates a random 32-byte challenge and sends it to the phone. The phone signs it with its private key and returns the signature. Linux verifies the signature against the stored public key. If it matches — you're in.
+
+## Why this is secure
+
+**Someone listening on your Wi-Fi?** They'll see the public key and the signatures. That's fine — the public key is *public*, and signatures can't be reused because the challenge is random every time.
+
+**Someone trying to replay an old login?** Won't work. Each challenge is a fresh 32-byte random number. A signature that worked before won't match the new challenge.
+
+**Someone sitting between your computer and your phone (man-in-the-middle)?** They can intercept the challenge, but they can't forge a valid signature — that would require the private key, which is locked in the phone's secure hardware. If they send a different challenge to the phone, the signature they get back won't match what the computer expects. Either way, they lose.
+
+**The only way to break this**: steal the private key from the phone. But it's stored in the TEE (Trusted Execution Environment) — a hardware-isolated chip that even the operating system can't read. To extract it, you'd need physical access, specialised equipment, and serious expertise.
+
+In short: you can watch all the traffic, intercept every packet, and still gain nothing. The private key stays in the phone. The phone stays in your pocket.
+
 ## Architecture
 
 ```
@@ -123,7 +141,7 @@ auth    requisite       pam_nologin.so
 ...
 ```
 
-**Do NOT add to `/etc/pam.d/sudo` or `/etc/pam.d/sshd`** — phone auth only for GUI unlock.
+Do NOT add to `/etc/pam.d/sudo` or `/etc/pam.d/sshd` — phone auth only for GUI unlock.
 
 ### 4. Disable Setup Mode
 
@@ -134,7 +152,7 @@ After pairing, turn off Setup Mode in the app. The phone will reject `GET_PUBKEY
 1. Keep AlpDSA service running on phone
 2. At Linux login screen, press Enter (or type anything as password)
 3. If phone is on the same Wi-Fi — login succeeds instantly
-4. If phone is offline — falls back to password
+4. If phone is offline, key is wrong, server disabled, anything bad happens — falls back to password
 
 Timeout: 1 second (configurable in `alpdsa.c`).
 
