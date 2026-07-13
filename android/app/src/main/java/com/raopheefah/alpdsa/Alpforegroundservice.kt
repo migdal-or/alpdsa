@@ -73,7 +73,7 @@ class AlpForegroundService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("AlpDSA")
             .setContentText("Auth server is running")
-            .setSmallIcon(android.R.drawable.ic_lock_lock) // placeholder icon, replace later
+            .setSmallIcon(R.drawable.ic_notif)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(contentPendingIntent)
