@@ -56,9 +56,17 @@ static int connect_to_target(const alpdsa_target_t *target, int timeout_sec) {
     addr.sin_port = htons(target->port);
 
     if (inet_pton(AF_INET, target->host, &addr.sin_addr) != 1) {
-        struct hostent *he = gethostbyname(target->host);
-        if (!he) { close(fd); return -1; }
-        memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+        struct addrinfo hints = {0};
+        struct addrinfo *res = NULL;
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+
+        if (getaddrinfo(target->host, NULL, &hints, &res) != 0 || !res) {
+            close(fd);
+            return -1;
+        }
+        memcpy(&addr.sin_addr, &((struct sockaddr_in *)res->ai_addr)->sin_addr, sizeof(struct in_addr));
+        freeaddrinfo(res);
     }
 
     int flags = fcntl(fd, F_GETFL, 0);
